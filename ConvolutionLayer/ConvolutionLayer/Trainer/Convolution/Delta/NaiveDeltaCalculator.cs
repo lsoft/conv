@@ -1,23 +1,30 @@
 using System;
+using System.Runtime.CompilerServices;
+using ConvolutionLayer.Activation;
 
 namespace ConvolutionLayer.Trainer.Convolution.Delta
 {
     public class NaiveDeltaCalculator : IDeltaCalculator
     {
         public MemFloat CalculateDelta(
-            MemFloat currentLayer,
-            MemFloat nextLayerDeDz,
+            IFunction activationFunction,
+            MemFloat currentLayerNET,
+            MemFloat nextLayerDeDy,
             MemFloat previousLayer,
             int kernelSize
             )
         {
-            if (currentLayer == null)
+            if (activationFunction == null)
             {
-                throw new ArgumentNullException("currentLayer");
+                throw new ArgumentNullException("activationFunction");
             }
-            if (nextLayerDeDz == null)
+            if (currentLayerNET == null)
             {
-                throw new ArgumentNullException("nextLayerDeDz");
+                throw new ArgumentNullException("currentLayerNET");
+            }
+            if (nextLayerDeDy == null)
+            {
+                throw new ArgumentNullException("nextLayerDeDy");
             }
             if (previousLayer == null)
             {
@@ -31,13 +38,14 @@ namespace ConvolutionLayer.Trainer.Convolution.Delta
                 {
                     var dEdw_ab = 0f;
 
-                    for (var i = 0; i < currentLayer.Width; i++)
+                    for (var i = 0; i < currentLayerNET.Width; i++)
                     {
-                        for (var j = 0; j < currentLayer.Height; j++)
+                        for (var j = 0; j < currentLayerNET.Height; j++)
                         {
-                            var sigma_sh_ij = 1f;
+                            var z_ij = currentLayerNET.GetValueFromCoordSafely(i, j);
+                            var sigma_sh_ij = activationFunction.ComputeFirstDerivative(z_ij);
 
-                            var dEdy_ij = nextLayerDeDz.GetValueFromCoordSafely(i, j);
+                            var dEdy_ij = nextLayerDeDy.GetValueFromCoordSafely(i, j);
                             var dEdz_ij = dEdy_ij * sigma_sh_ij;
 
                             var y = previousLayer.GetValueFromCoordSafely(

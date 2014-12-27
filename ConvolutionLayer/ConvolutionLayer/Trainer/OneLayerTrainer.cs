@@ -1,4 +1,5 @@
 using System;
+using ConvolutionLayer.Activation;
 using ConvolutionLayer.Helper;
 using ConvolutionLayer.Metrics;
 using ConvolutionLayer.Trainer.Convolution.Calculator;
@@ -53,6 +54,7 @@ namespace ConvolutionLayer.Trainer
         }
 
         public void DoTrain(
+            IFunction activationFunction,
             MemFloat image,
             MemFloat kernel,
             MemFloat desiredValues,
@@ -62,6 +64,10 @@ namespace ConvolutionLayer.Trainer
             float learningRate
             )
         {
+            if (activationFunction == null)
+            {
+                throw new ArgumentNullException("activationFunction");
+            }
             if (image == null)
             {
                 throw new ArgumentNullException("image");
@@ -85,35 +91,42 @@ namespace ConvolutionLayer.Trainer
                 Console.WriteLine();
                 Console.WriteLine();
 
-                LayerVisualizer.Show("image", image.Values, image.Width, image.Height);
+                LayerVisualizer.Show("image", image.Array, image.Width, image.Height);
 
-                LayerVisualizer.Show("desired", desiredValues.Values, desiredValues.Width, desiredValues.Height);
+                LayerVisualizer.Show("desired", desiredValues.Array, desiredValues.Width, desiredValues.Height);
 
                 //вычисляем проход вперед
-                var convolution = _convolutionCalculator.CalculateConvolution(
+                var currentLayerNET = new MemFloat(convolutionSize, convolutionSize);
+                var currentLayerState = new MemFloat(convolutionSize, convolutionSize);
+                _convolutionCalculator.CalculateConvolution(
+                    activationFunction,
                     kernel,
                     image,
-                    convolutionSize
+                    convolutionSize,
+                    currentLayerNET,
+                    currentLayerState
                     );
-                LayerVisualizer.Show("convolution", convolution.Values, convolution.Width, convolution.Height);
+                LayerVisualizer.Show("currentLayerNET (convolution w\\o activation function)", currentLayerNET.Array, currentLayerNET.Width, currentLayerNET.Height);
+                LayerVisualizer.Show("currentLayerState (convolution with activation function)", currentLayerState.Array, currentLayerState.Width, currentLayerState.Height);
 
                 //вычисляем значение ошибки (dE/dy)
-                var err = _errorCalculator.CalculateError(
-                    convolution,
+                var dEdY = _errorCalculator.CalculateError(
+                    currentLayerState,
                     desiredValues,
                     _e
                     );
-                LayerVisualizer.Show("err", err.Values, err.Width, err.Height);
+                LayerVisualizer.Show("err (dE/dY)", dEdY.Array, dEdY.Width, dEdY.Height);
 
                 //вычисляем производную функции активации нейрона
                 var delta = _deltaCalculator.CalculateDelta(
-                    convolution,
-                    err,
+                    activationFunction,
+                    currentLayerNET,
+                    dEdY,
                     image,
                     kernelSize
                     );
 
-                LayerVisualizer.Show("delta (" + epoch + ")", delta.Values, delta.Width, delta.Height);
+                LayerVisualizer.Show("delta (" + epoch + ")", delta.Array, delta.Width, delta.Height);
 
                 //вычитаем
                 _weightUpdater.UpdateWeights(
@@ -122,11 +135,111 @@ namespace ConvolutionLayer.Trainer
                     learningRate
                     );
 
-                LayerVisualizer.Show("kernel (" + epoch + ")", kernel.Values, kernel.Width, kernel.Height);
+                LayerVisualizer.Show("kernel (" + epoch + ")", kernel.Array, kernel.Width, kernel.Height);
+
+                //Console.ReadLine();
 
             }
 
             Console.ReadLine();
         }
     }
+
+    public class ConvolutionLayerContainer
+    {
+        public MemFloat Net
+        {
+            get;
+            private set;
+        }
+
+        public MemFloat State
+        {
+            get;
+            private set;
+        }
+
+        public MemFloat Kernel
+        {
+            get;
+            private set;
+        }
+
+        public ConvolutionLayerContainer(
+            int convolutionWidth,
+            int convolutionHeight,
+            int kernelWidth,
+            int kernelHeight
+            )
+        {
+            this.Net = new MemFloat(convolutionWidth, convolutionHeight);
+            this.State = new MemFloat(convolutionWidth, convolutionHeight);
+
+            this.Kernel = new MemFloat(kernelWidth, kernelHeight);
+        }
+    }
+
+    public interface ILayerPropagator
+    {
+        void ComputeLayer(
+            );
+    }
+
+    public class ConvolutionLayerPropagator : ILayerPropagator
+    {
+        private readonly ConvolutionLayerContainer _previousContainer;
+        private readonly ConvolutionLayerContainer _currentContainer;
+        private readonly IConvolutionCalculator _convolutionCalculator;
+        private readonly int _convolutionSize;
+        private readonly IFunction _activationFunction;
+
+        public ConvolutionLayerPropagator(
+            ConvolutionLayerContainer previousContainer,
+            ConvolutionLayerContainer currentContainer,
+            IConvolutionCalculator convolutionCalculator,
+            int convolutionSize,
+            IFunction activationFunction
+
+            )
+        {
+            if (previousContainer == null)
+            {
+                throw new ArgumentNullException("previousContainer");
+            }
+            if (currentContainer == null)
+            {
+                throw new ArgumentNullException("currentContainer");
+            }
+            if (convolutionCalculator == null)
+            {
+                throw new ArgumentNullException("convolutionCalculator");
+            }
+            if (activationFunction == null)
+            {
+                throw new ArgumentNullException("activationFunction");
+            }
+
+            _previousContainer = previousContainer;
+            _currentContainer = currentContainer;
+            _convolutionCalculator = convolutionCalculator;
+            _convolutionSize = convolutionSize;
+            _activationFunction = activationFunction;
+        }
+
+        public void ComputeLayer(
+            )
+        {
+            _convolutionCalculator.CalculateConvolution(
+                _activationFunction,
+                _currentContainer.Kernel,
+                _previousContainer.State,
+                _convolutionSize,
+                _currentContainer.Net,
+                _currentContainer.State
+                );
+            LayerVisualizer.Show("currentLayerNET (convolution w\\o activation function)", _currentContainer.Net.Array, _currentContainer.Net.Width, _currentContainer.Net.Height);
+            LayerVisualizer.Show("currentLayerState (convolution with activation function)", _currentContainer.State.Array, _currentContainer.State.Width, _currentContainer.State.Height);
+        }
+    }
+
 }

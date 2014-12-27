@@ -1,11 +1,16 @@
+using ConvolutionLayer.Activation;
+
 namespace ConvolutionLayer.Trainer.Convolution.Calculator
 {
     public interface IConvolutionCalculator
     {
-        MemFloat CalculateConvolution(
+        void CalculateConvolution(
+            IFunction activationFunction,
             MemFloat currentLayerKernel,
             MemFloat previousLayer,
-            int forwardSize
+            int forwardSize,
+            MemFloat currentLayerNET,
+            MemFloat currentLayerState
             );
     }
 }

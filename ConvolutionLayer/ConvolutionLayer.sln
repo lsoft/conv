@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvolutionLayer", "ConvolutionLayer\ConvolutionLayer.csproj", "{8EF0E217-3096-48BD-A15B-51A3671A92CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvolutionLayer.Tests", "ConvolutionLayer.Tests\ConvolutionLayer.Tests.csproj", "{B41743BC-A579-4881-BA11-CB46CA31B176}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{8EF0E217-3096-48BD-A15B-51A3671A92CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EF0E217-3096-48BD-A15B-51A3671A92CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EF0E217-3096-48BD-A15B-51A3671A92CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B41743BC-A579-4881-BA11-CB46CA31B176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B41743BC-A579-4881-BA11-CB46CA31B176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B41743BC-A579-4881-BA11-CB46CA31B176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B41743BC-A579-4881-BA11-CB46CA31B176}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

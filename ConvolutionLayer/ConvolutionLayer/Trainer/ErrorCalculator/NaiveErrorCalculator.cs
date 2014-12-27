@@ -32,12 +32,12 @@ namespace ConvolutionLayer.Trainer.ErrorCalculator
                     var index = h * err.Width + w;
 
                     var errv = e.CalculatePartialDerivativeByV2Index(
-                        desiredValues.Values,
-                        calculatedValues.Values,
+                        desiredValues.Array,
+                        calculatedValues.Array,
                         index
                         );
 
-                    err.Values[index] = errv;
+                    err.Array[index] = errv;
                 }
             }
 

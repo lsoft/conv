@@ -1,15 +1,23 @@
 using System;
+using ConvolutionLayer.Activation;
 
 namespace ConvolutionLayer.Trainer.Convolution.Calculator
 {
     public class NaiveConvolutionCalculator : IConvolutionCalculator
     {
-        public MemFloat CalculateConvolution(
+        public void CalculateConvolution(
+            IFunction activationFunction,
             MemFloat currentLayerKernel,
             MemFloat previousLayer,
-            int forwardSize
+            int forwardSize,
+            MemFloat currentLayerNET, //z
+            MemFloat currentLayerState //y
             )
         {
+            if (activationFunction == null)
+            {
+                throw new ArgumentNullException("activationFunction");
+            }
             if (currentLayerKernel == null)
             {
                 throw new ArgumentNullException("currentLayerKernel");
@@ -19,10 +27,10 @@ namespace ConvolutionLayer.Trainer.Convolution.Calculator
                 throw new ArgumentNullException("previousLayer");
             }
 
-            var zConvolution = new MemFloat(forwardSize, forwardSize);
-            for (var i = 0; i < zConvolution.Width; i++)
+            //делаем свертку
+            for (var i = 0; i < currentLayerNET.Width; i++)
             {
-                for (var j = 0; j < zConvolution.Height; j++)
+                for (var j = 0; j < currentLayerNET.Height; j++)
                 {
                     var zSum = 0f;
                     for (var a = 0; a < currentLayerKernel.Width; a++)
@@ -37,7 +45,7 @@ namespace ConvolutionLayer.Trainer.Convolution.Calculator
                         }
                     }
 
-                    zConvolution.SetValueFromCoord(
+                    currentLayerNET.SetValueFromCoord(
                         i,
                         j,
                         zSum
@@ -45,7 +53,18 @@ namespace ConvolutionLayer.Trainer.Convolution.Calculator
                 }
             }
 
-            return zConvolution;
+            //применяем функцию активации
+            for (var i = 0; i < currentLayerState.Width; i++)
+            {
+                for (var j = 0; j < currentLayerState.Height; j++)
+                {
+                    var prevv = currentLayerNET.GetValueFromCoordSafely(i, j);
+
+                    var newv = activationFunction.Compute(prevv);
+
+                    currentLayerState.SetValueFromCoord(i, j, newv);
+                }
+            }
         }
     }
 }

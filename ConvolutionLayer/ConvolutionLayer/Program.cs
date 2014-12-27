@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using ConvolutionLayer.Activation;
 using ConvolutionLayer.Helper;
 using ConvolutionLayer.Metrics;
 using ConvolutionLayer.Trainer;
@@ -26,7 +27,7 @@ namespace ConvolutionLayer
             const int ImageSize = 5;
             const int KernelSize = 3;
             const int ConvolutionSize = ImageSize - KernelSize + 1;
-            const float LearningRate = 0.1f;
+            const float LearningRate = 0.5f;
             const int MaxEpoches = 100;
 
             var random = new Random(5641);
@@ -36,21 +37,22 @@ namespace ConvolutionLayer
             {
                 image.SetValueFromCoord(ImageSize - cc - 1, cc, 1f);
             }
-            //LayerVisualizer.Show("image", image.Values, image.Width, image.Height);
+            //LayerVisualizer.Show("image", image.Array, image.Width, image.Height);
 
             var desiredValues = new MemFloat(ConvolutionSize, ConvolutionSize);
+            desiredValues.Array.Fill(0.5f);
             for (var cc = 0; cc < ConvolutionSize; cc++)
             {
-                desiredValues.SetValueFromCoord(ConvolutionSize - cc - 1, cc, 1f);
+                desiredValues.SetValueFromCoord(ConvolutionSize - cc - 1, cc, 0.85f);
             }
 
             var kernel = new MemFloat(KernelSize, KernelSize);
-            kernel.Values.Fill(j => (float)random.NextDouble());
+            kernel.Array.Fill(j => (float)random.NextDouble());
             //for (var cc = 0; cc < KernelSize; cc++)
             //{
             //    kernel.SetValueFromCoord(KernelSize / 2, cc, 1f);
             //}
-            LayerVisualizer.Show("default kernel", kernel.Values, kernel.Width, kernel.Height);
+            LayerVisualizer.Show("default kernel", kernel.Array, kernel.Width, kernel.Height);
 
             //функцию нейрона применять не будем для простоты
             //т.е. y = x, y' = 1
@@ -74,7 +76,12 @@ namespace ConvolutionLayer
                 e
                 );
 
+            var activationFunction = 
+                new SigmoidFunction(1f);
+                //new LinearFunction(1f);
+
             oneLayerTrainer.DoTrain(
+                activationFunction,
                 image,
                 kernel,
                 desiredValues,

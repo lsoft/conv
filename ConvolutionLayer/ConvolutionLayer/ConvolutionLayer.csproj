@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activation\IFunction.cs" />
+    <Compile Include="Activation\LinearFunction.cs" />
+    <Compile Include="Activation\SigmoidFunction.cs" />
     <Compile Include="Helper\ArrayOperations.cs" />
     <Compile Include="Trainer\OneLayerTrainer.cs" />
     <Compile Include="Trainer\Convolution\Delta\IDeltaCalculator.cs" />

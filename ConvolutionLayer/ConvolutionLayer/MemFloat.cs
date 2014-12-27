@@ -4,7 +4,7 @@ namespace ConvolutionLayer
 {
     public class MemFloat
     {
-        public float[] Values
+        public float[] Array
         {
             get;
             private set;
@@ -22,32 +22,32 @@ namespace ConvolutionLayer
             private set;
         }
 
-        public MemFloat(int width, int height, float[] values)
+        public MemFloat(int width, int height, float[] array)
         {
-            if (values == null)
+            if (array == null)
             {
-                throw new ArgumentNullException("values");
+                throw new ArgumentNullException("array");
             }
-            if (values.Length != width*height)
+            if (array.Length != width*height)
             {
-                throw new ArgumentException("values.Length != width*height");
+                throw new ArgumentException("Array.Length != width*height");
             }
 
             Width = width;
             Height = height;
-            this.Values = values;
+            this.Array = array;
         }
 
         public MemFloat(int width, int height)
         {
             Width = width;
             Height = height;
-            this.Values = new float[width * height];
+            this.Array = new float[width * height];
         }
 
         public void SetValueFromCoord(int readw, int readh, float value)
         {
-            Values[readh * Width + readw] = value;
+            Array[readh * Width + readw] = value;
         }
 
         public float GetValueFromCoordSafely(int fromw, int fromh)
@@ -62,7 +62,7 @@ namespace ConvolutionLayer
             }
 
             return
-                Values[fromw * Width + fromh];
+                Array[fromw * Width + fromh];
         }
 
     }
