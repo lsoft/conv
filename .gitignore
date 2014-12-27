@@ -1,0 +1,8 @@
+obj
+bin
+packages
+TestResults
+*.suo
+x64
+x86
+_ReSharper.*
