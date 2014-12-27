@@ -65,44 +65,5 @@ namespace ConvolutionLayer
                 Values[fromw * Width + fromh];
         }
 
-        public float GetValueFromCoord(int fromw, int fromh)
-        {
-            var result = 0f;
-
-            if (fromw >= 0 && fromw < Width)
-            {
-                if (fromh >= 0 && fromh < Height)
-                {
-                    result = Values[fromw * Width + fromh];
-                }
-            }
-
-            return result;
-        }
-
-        public float GetValueFromCoordCyclic(int fromw, int fromh)
-        {
-            if (fromw < 0)
-            {
-                fromw = Width + fromw;
-            }
-            if (fromh < 0)
-            {
-                fromh = Height + fromh;
-            }
-
-            if (fromw >= Width)
-            {
-                fromw = fromw - Width;
-            }
-            if (fromh >= Height)
-            {
-                fromh = fromh - Height;
-            }
-
-            var result = Values[fromw * Width + fromh];
-
-            return result;
-        }
     }
 }

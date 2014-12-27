@@ -19,7 +19,7 @@ namespace ConvolutionLayer
             const int KernelSize = 3;
             const int ForwardSize = ImageSize - KernelSize + 1;
 
-            var random = new Random(564);
+            var random = new Random(5641);
 
             var image = new Img(ImageSize, ImageSize);
             for (var cc = 0; cc < ImageSize; cc++)
@@ -34,11 +34,11 @@ namespace ConvolutionLayer
                 desired.SetValueFromCoord(ForwardSize - cc - 1, cc, 1f);
             }
 
-            var kernel = new Kernel(KernelSize, KernelSize);
+            var kernel = new Img(KernelSize, KernelSize);
             kernel.Values.Fill(j => (float)random.NextDouble());
             //for (var cc = 0; cc < KernelSize; cc++)
             //{
-            //    kernel.SetValueFromCoord(kernel.PartHorizontal, cc, 1f);
+            //    kernel.SetValueFromCoord(KernelSize / 2, cc, 1f);
             //}
             LayerVisualizer.Show("default kernel", kernel.Values, kernel.Width, kernel.Height);
 
@@ -60,16 +60,16 @@ namespace ConvolutionLayer
 
                 //вычисляем проход вперед
                 var forward = new Img(ForwardSize, ForwardSize);
-                for (var i = kernel.PartHorizontal; i < ImageSize - kernel.PartHorizontal; i++)
+                for (var i = 0; i < forward.Width; i++)
                 {
-                    for (var j = kernel.PartHorizontal; j < ImageSize - kernel.PartHorizontal; j++)
+                    for (var j = 0; j < forward.Height; j++)
                     {
                         var sum = 0f;
-                        for (var a = -kernel.PartHorizontal; a <= kernel.PartHorizontal; a++)
+                        for (var a = 0; a < kernel.Width; a++)
                         {
-                            for (var b = -kernel.PartVertical; b <= kernel.PartVertical; b++)
+                            for (var b = 0; b < kernel.Height; b++)
                             {
-                                var w = kernel.GetValueFromCenter(a, b);
+                                var w = kernel.GetValueFromCoordSafely(a, b);
                                 var y = image.GetValueFromCoordSafely(i + a, j + b);
 
                                 var z = w * y;
@@ -78,13 +78,12 @@ namespace ConvolutionLayer
                         }
 
                         forward.SetValueFromCoord(
-                            i - kernel.PartHorizontal,
-                            j - kernel.PartHorizontal,
+                            i,
+                            j,
                             sum
                             );
                     }
-                }
-                LayerVisualizer.Show("forward w\\o function", forward.Values, forward.Width, forward.Height);
+                } LayerVisualizer.Show("forward w\\o function", forward.Values, forward.Width, forward.Height);
 
                 //вычисляем значение ошибки (dE/dy)
                 var err = new Img(desired.Width, desired.Height);
@@ -114,7 +113,7 @@ namespace ConvolutionLayer
 
 
                 //вычисляем производную функции активации нейрона
-                var delta = new Kernel(KernelSize, KernelSize);
+                var delta = new Img(KernelSize, KernelSize);
 
                 for (var a = 0; a < KernelSize; a++)
                 {
@@ -161,10 +160,16 @@ namespace ConvolutionLayer
                 {
                     for (var b = 0; b < kernel.Height; b++)
                     {
+                        var origv = kernel.GetValueFromCoordSafely(a, b);
+                        var deltav = delta.GetValueFromCoordSafely(a, b);
+
+                        var newv = origv - LearningRate * deltav;
+
                         kernel.SetValueFromCoord(
                             a,
                             b,
-                            kernel.GetValueFromCoord(a, b) - LearningRate * delta.GetValueFromCoord(a, b));
+                            newv
+                            );
                     }
                 }
 
