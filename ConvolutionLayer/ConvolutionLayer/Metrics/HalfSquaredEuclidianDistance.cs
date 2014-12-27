@@ -1,25 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ConvolutionLayer
+namespace ConvolutionLayer.Metrics
 {
-    public interface IMetrics
-    {
-        float Calculate(
-            float[] desiredValues,
-            float[] predictedValues
-            );
-
-        float CalculatePartialDerivativeByV2Index(
-            float[] desiredValues,
-            float[] predictedValues,
-            int v2Index
-            );
-    }
-
     public class HalfSquaredEuclidianDistance : IMetrics
     {
         public float Calculate(

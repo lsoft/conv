@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ConvolutionLayer
+namespace ConvolutionLayer.Helper
 {
     public class LayerVisualizer
     {
@@ -45,7 +45,7 @@ namespace ConvolutionLayer
 
                     if (v < 0)
                     {
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
                     }
                     else
                     {

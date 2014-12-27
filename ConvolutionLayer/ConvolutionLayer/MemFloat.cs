@@ -2,7 +2,7 @@
 
 namespace ConvolutionLayer
 {
-    public class Img
+    public class MemFloat
     {
         public float[] Values
         {
@@ -22,7 +22,7 @@ namespace ConvolutionLayer
             private set;
         }
 
-        public Img(int width, int height, float[] values)
+        public MemFloat(int width, int height, float[] values)
         {
             if (values == null)
             {
@@ -38,7 +38,7 @@ namespace ConvolutionLayer
             this.Values = values;
         }
 
-        public Img(int width, int height)
+        public MemFloat(int width, int height)
         {
             Width = width;
             Height = height;

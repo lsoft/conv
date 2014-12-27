@@ -41,11 +41,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArrayOperations.cs" />
-    <Compile Include="HalfSquaredEuclidianDistance.cs" />
-    <Compile Include="Img.cs" />
-    <Compile Include="Kernel.cs" />
-    <Compile Include="LayerVisualizer.cs" />
+    <Compile Include="Helper\ArrayOperations.cs" />
+    <Compile Include="Trainer\OneLayerTrainer.cs" />
+    <Compile Include="Trainer\Convolution\Delta\IDeltaCalculator.cs" />
+    <Compile Include="Trainer\Convolution\Delta\NaiveDeltaCalculator.cs" />
+    <Compile Include="Trainer\ErrorCalculator\IErrorCalculator.cs" />
+    <Compile Include="Metrics\HalfSquaredEuclidianDistance.cs" />
+    <Compile Include="Metrics\IMetrics.cs" />
+    <Compile Include="Trainer\ErrorCalculator\NaiveErrorCalculator.cs" />
+    <Compile Include="Trainer\Convolution\Calculator\IConvolutionCalculator.cs" />
+    <Compile Include="MemFloat.cs" />
+    <Compile Include="Trainer\WeightUpdater\IWeightUpdater.cs" />
+    <Compile Include="Helper\LayerVisualizer.cs" />
+    <Compile Include="Trainer\Convolution\Calculator\NaiveConvolutionCalculator.cs" />
+    <Compile Include="Trainer\WeightUpdater\NaiveWeightUpdater.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

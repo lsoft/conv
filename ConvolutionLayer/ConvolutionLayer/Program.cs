@@ -7,6 +7,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using ConvolutionLayer.Helper;
+using ConvolutionLayer.Metrics;
+using ConvolutionLayer.Trainer;
+using ConvolutionLayer.Trainer.Convolution;
+using ConvolutionLayer.Trainer.Convolution.Calculator;
+using ConvolutionLayer.Trainer.Convolution.Delta;
+using ConvolutionLayer.Trainer.ErrorCalculator;
+using ConvolutionLayer.Trainer.WeightUpdater;
 using Microsoft.VisualBasic;
 
 namespace ConvolutionLayer
@@ -17,24 +25,26 @@ namespace ConvolutionLayer
         {
             const int ImageSize = 5;
             const int KernelSize = 3;
-            const int ForwardSize = ImageSize - KernelSize + 1;
+            const int ConvolutionSize = ImageSize - KernelSize + 1;
+            const float LearningRate = 0.1f;
+            const int MaxEpoches = 100;
 
             var random = new Random(5641);
 
-            var image = new Img(ImageSize, ImageSize);
+            var image = new MemFloat(ImageSize, ImageSize);
             for (var cc = 0; cc < ImageSize; cc++)
             {
                 image.SetValueFromCoord(ImageSize - cc - 1, cc, 1f);
             }
             //LayerVisualizer.Show("image", image.Values, image.Width, image.Height);
 
-            var desired = new Img(ForwardSize, ForwardSize);
-            for (var cc = 0; cc < ForwardSize; cc++)
+            var desiredValues = new MemFloat(ConvolutionSize, ConvolutionSize);
+            for (var cc = 0; cc < ConvolutionSize; cc++)
             {
-                desired.SetValueFromCoord(ForwardSize - cc - 1, cc, 1f);
+                desiredValues.SetValueFromCoord(ConvolutionSize - cc - 1, cc, 1f);
             }
 
-            var kernel = new Img(KernelSize, KernelSize);
+            var kernel = new MemFloat(KernelSize, KernelSize);
             kernel.Values.Fill(j => (float)random.NextDouble());
             //for (var cc = 0; cc < KernelSize; cc++)
             //{
@@ -48,143 +58,31 @@ namespace ConvolutionLayer
             //функция ошибки
             var e = new HalfSquaredEuclidianDistance();
 
-            for(var epoch = 0; ; epoch++)
-            {
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
+            var convolutionCalculator = new NaiveConvolutionCalculator();
 
-                LayerVisualizer.Show("image", image.Values, image.Width, image.Height);
+            var weightUpdater = new NaiveWeightUpdater();
 
-                LayerVisualizer.Show("desired", desired.Values, desired.Width, desired.Height);
+            var errorCalculator = new NaiveErrorCalculator();
 
-                //вычисляем проход вперед
-                var forward = new Img(ForwardSize, ForwardSize);
-                for (var i = 0; i < forward.Width; i++)
-                {
-                    for (var j = 0; j < forward.Height; j++)
-                    {
-                        var sum = 0f;
-                        for (var a = 0; a < kernel.Width; a++)
-                        {
-                            for (var b = 0; b < kernel.Height; b++)
-                            {
-                                var w = kernel.GetValueFromCoordSafely(a, b);
-                                var y = image.GetValueFromCoordSafely(i + a, j + b);
+            var deltaCalculator = new NaiveDeltaCalculator();
 
-                                var z = w * y;
-                                sum += z;
-                            }
-                        }
+            var oneLayerTrainer = new OneLayerTrainer(
+                convolutionCalculator,
+                weightUpdater,
+                errorCalculator,
+                deltaCalculator,
+                e
+                );
 
-                        forward.SetValueFromCoord(
-                            i,
-                            j,
-                            sum
-                            );
-                    }
-                } LayerVisualizer.Show("forward w\\o function", forward.Values, forward.Width, forward.Height);
-
-                //вычисляем значение ошибки (dE/dy)
-                var err = new Img(desired.Width, desired.Height);
-
-                for (var w = 0; w < err.Width; w++)
-                {
-                    for (var h = 0; h < err.Height; h++)
-                    {
-                        var index = h*err.Width + w;
-
-                        var errv = e.CalculatePartialDerivativeByV2Index(
-                            desired.Values,
-                            forward.Values,
-                            index
-                            );
-
-                        err.Values[index] = errv;
-                    }
-                }
-
-                LayerVisualizer.Show(
-                    "err",
-                    err.Values,
-                    err.Width,
-                    err.Height
-                    );
-
-
-                //вычисляем производную функции активации нейрона
-                var delta = new Img(KernelSize, KernelSize);
-
-                for (var a = 0; a < KernelSize; a++)
-                {
-                    for (var b = 0; b < KernelSize; b++)
-                    {
-                        var dEdw_ab = 0f;
-
-                        for (var i = 0; i < forward.Width; i++)
-                        {
-                            for (var j = 0; j < forward.Height; j++)
-                            {
-                                var sigma_sh_ij = 1f;
-
-                                var dEdy_ij = err.GetValueFromCoordSafely(i, j);
-                                var dEdz_ij = dEdy_ij*sigma_sh_ij;
-
-                                var y = image.GetValueFromCoordSafely(
-                                    i + a,
-                                    j + b
-                                    );
-
-                                var mul = dEdz_ij * y;
-
-                                dEdw_ab += mul;
-                            }
-                        }
-
-                        //вычислено dEdw_ab
-                        delta.SetValueFromCoord(a, b, dEdw_ab);
-                    }
-                }
-
-                LayerVisualizer.Show(
-                    "delta (" + epoch + ")",
-                    delta.Values,
-                    delta.Width,
-                    delta.Height
-                    );
-
-                //вычитаем
-                const float LearningRate = 0.1f;
-
-                for (var a = 0; a < kernel.Width; a++)
-                {
-                    for (var b = 0; b < kernel.Height; b++)
-                    {
-                        var origv = kernel.GetValueFromCoordSafely(a, b);
-                        var deltav = delta.GetValueFromCoordSafely(a, b);
-
-                        var newv = origv - LearningRate * deltav;
-
-                        kernel.SetValueFromCoord(
-                            a,
-                            b,
-                            newv
-                            );
-                    }
-                }
-
-                LayerVisualizer.Show(
-                    "kernel (" + epoch + ")",
-                    kernel.Values,
-                    kernel.Width,
-                    kernel.Height
-                    );
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.ReadLine();
-            }
+            oneLayerTrainer.DoTrain(
+                image,
+                kernel,
+                desiredValues,
+                MaxEpoches,
+                ConvolutionSize,
+                KernelSize,
+                LearningRate
+                );
 
         }
     }
